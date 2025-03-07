@@ -53,10 +53,11 @@ Log events may also contain a `type`, `subtype`, icon (`ti`), and additional fie
 | AgentInfo | None | None | platform; python[interpreter,version]; agent[version,installedAt,runningAs]; depenencies | Information about the running Agent software. |
 | API | Req | 📤 | operation; request_url; params; resource (optional) | A request to an AWS API. Only requests to AWS Deadline Cloud APIs contain a resource field. |
 | API | Resp | 📥 | operation; params; status_code, request_id; error (optional) | A response from an AWS API request. |
-| FileSystem | Read/Write/Create/Delete | 💾 | filepath; message | A filesystem operation. |
 | AWSCreds | Load/Install/Delete | 🔑 | resource; message; role_arn (optional) | Related to an operation for AWS Credentials. |
 | AWSCreds | Query | 🔑 | resource; message; role_arn (optional); expiry (optional) | Related to an operation for AWS Credentials. |
 | AWSCreds | Refresh | 🔑 | resource; message; role_arn (optional); expiry (optional); scheduled_time (optional) | Related to an operation for AWS Credentials. |
+| Config | WorkerHostConfiguration | 📜 | farm_id; fleet_id; worker_id optional; message | Worker Host configuration event. |
+| FileSystem | Read/Write/Create/Delete | 💾 | filepath; message | A filesystem operation. |
 | Metrics | System | 📊 | many | System metrics. |
 | Session | Starting/Failed/AWSCreds/Complete/Info | 🔷 | queue_id; job_id; session_id | An update or information related to a Session. |
 | Session | Add/Remove | 🔷 | queue_id; job_id; session_id; action_ids; queued_actions | Adding or removing SessionActions in a Session. |
