@@ -210,25 +210,6 @@ Write-Host "10s"
 exit 0
 """
 
-            worker_sessions = Worker(
-                farm_id=config.farm_id,
-                fleet_id=config.fleet_id,
-                worker_id=worker_id,
-                deadline_client=deadline_client,
-                s3_client=s3_client,
-                logs_client=logs_client,
-                boto_session=session,
-                job_run_as_user_override=config.job_run_as_user_overrides,
-                cleanup_session_user_processes=config.cleanup_session_user_processes,
-                worker_persistence_dir=config.worker_persistence_dir,
-                worker_logs_dir=config.worker_logs_dir if config.local_session_logs else None,
-                host_metrics_logging=config.host_metrics_logging,
-                host_metrics_logging_interval_seconds=config.host_metrics_logging_interval_seconds,
-                retain_session_dir=config.retain_session_dir,
-                stop=stop,
-                session_root_dir=config.session_root_dir,
-            )
-
             # Before the run looop starts, run the Host Configuration script.
             worker_bootstrap.host_config = WorkerHostConfiguration(
                 script_body=script_body,
@@ -308,6 +289,25 @@ exit 0
                     sys.exit(1)
 
             try:
+                worker_sessions = Worker(
+                    farm_id=config.farm_id,
+                    fleet_id=config.fleet_id,
+                    worker_id=worker_id,
+                    deadline_client=deadline_client,
+                    s3_client=s3_client,
+                    logs_client=logs_client,
+                    boto_session=session,
+                    job_run_as_user_override=config.job_run_as_user_overrides,
+                    cleanup_session_user_processes=config.cleanup_session_user_processes,
+                    worker_persistence_dir=config.worker_persistence_dir,
+                    worker_logs_dir=config.worker_logs_dir if config.local_session_logs else None,
+                    host_metrics_logging=config.host_metrics_logging,
+                    host_metrics_logging_interval_seconds=config.host_metrics_logging_interval_seconds,
+                    retain_session_dir=config.retain_session_dir,
+                    stop=stop,
+                    session_root_dir=config.session_root_dir,
+                )
+
                 worker_sessions.run()
             except ServiceShutdown:
                 shutdown_requested_by_service = True

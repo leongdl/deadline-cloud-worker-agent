@@ -80,7 +80,7 @@ class TestHostConfiguration:
         
         # The logs we are looking for are at the worker agent startup.
         # The logs should be available well before the job is completed.
-        for i in range(10):
+        for i in range(2):
             LOG.info(f"Waiting to get logs")
             logs_client = boto3.client(
                 "logs",
