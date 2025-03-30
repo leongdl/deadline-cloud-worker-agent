@@ -393,6 +393,8 @@ class Worker:
             # Could not connect to the metadata service. Either it's not enabled or we're not
             # on an EC2 instance.
             return None
+        except Exception:
+            return None
 
         if response.status_code == 200:
             return response.text
@@ -423,6 +425,8 @@ class Worker:
         except requests.ConnectionError:
             # Could not connect to the metadata service. Either it's inactive or we're not
             # on an EC2 instance.
+            return None
+        except Exception:
             return None
 
         if response.status_code == 200:
@@ -473,6 +477,8 @@ class Worker:
             )
         except requests.ConnectionError:
             return False
+        except Exception:
+            return None
 
         if response.status_code == 200:
             return response.text == "Terminated"

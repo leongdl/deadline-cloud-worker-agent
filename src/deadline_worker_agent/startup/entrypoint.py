@@ -21,6 +21,7 @@ from ..feature_flag import HOST_CONFIGURATION_FEATURE
 
 from ..api_models import WorkerStatus
 from ..aws.deadline import (
+    WorkerHostConfiguration,
     update_worker,
     update_worker_schedule,
     record_worker_start_telemetry_event,
@@ -178,7 +179,6 @@ def entrypoint(cli_args: Optional[list[str]] = None, *, stop: Optional[Event] = 
                 worker_id=worker_id,
                 session=session,
             )
-
             worker_sessions = Worker(
                 farm_id=config.farm_id,
                 fleet_id=config.fleet_id,
@@ -444,20 +444,52 @@ def _host_configuration(
     This method must be run within a cloudwatch stream context to stream logs.
     If the host configuration run fails, the worker agent exits.
     """
+    script_body = "set\naws sts get-caller-identity\nsleep 60\nexit 123"
+    if sys.platform == "win32":
+        script_body = r"""
+ls env:
+Get-ChildItem env: | ForEach-Object { "$($_.Name)=$($_.Value)" }
+aws sts get-caller-identity
+function Test-AdminPrivileges {
+    $currentUser = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
+    $isAdmin = $currentUser.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+    
+    return $isAdmin
+}
 
-    # If there was a host config, and it was bootstrapped before, only log a message.
-    if worker_bootstrap.host_config and not HOST_CONFIGURATION_FEATURE:
-        _logger.info(
-            WorkerHostConfigurationLogEvent(
-                farm_id=config.farm_id,
-                fleet_id=config.fleet_id,
-                worker_id=worker_id,
-                message="Host Configuration Feature is not enabled.",
-                status=WorkerHostConfigurationStatus.SKIPPED,
-            )
-        )
-        return
-    elif worker_bootstrap.host_config and worker_bootstrap.worker_info.host_configuration_succeeded:
+if (Test-AdminPrivileges) {
+    Write-Host "The current PowerShell session is elevated (running as Administrator)." -ForegroundColor Green
+} else {
+    Write-Host "The current PowerShell session is not elevated (not running as Administrator)." -ForegroundColor Yellow
+}
+Start-Sleep -Seconds 10
+Write-Host "10s"
+Start-Sleep -Seconds 10
+Write-Host "10s"
+Start-Sleep -Seconds 10
+Write-Host "10s"
+Start-Sleep -Seconds 10
+Write-Host "10s"
+Start-Sleep -Seconds 10
+Write-Host "10s"
+Start-Sleep -Seconds 10
+Write-Host "10s"
+Start-Sleep -Seconds 10
+Write-Host "10s"
+Start-Sleep -Seconds 10
+Write-Host "10s"
+Start-Sleep -Seconds 10
+Write-Host "10s"
+Start-Sleep -Seconds 10
+Write-Host "10s"
+exit 0
+"""
+    worker_bootstrap.host_config = WorkerHostConfiguration(
+        script_body=script_body,
+        script_timeout_seconds=300,
+    )
+
+    if worker_bootstrap.host_config and worker_bootstrap.worker_info.host_configuration_succeeded:
         _logger.info(
             WorkerHostConfigurationLogEvent(
                 farm_id=config.farm_id,

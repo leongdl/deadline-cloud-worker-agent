@@ -369,7 +369,7 @@ def _windows_file_permissions_test(file_path: str) -> None:
             current_user_permissions |= ace_mask
         elif sid == administrators_sid:
             admin_permissions |= ace_mask
-        elif sid != users_group_sid:  # We already checked Users group
+        else:
             # Keep track of any other SIDs that have access
             other_sids_found.append((win32security.LookupAccountSid(None, sid)[0], ace_mask))
 

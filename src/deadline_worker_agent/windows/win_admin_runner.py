@@ -46,6 +46,7 @@ class _WindowsScriptRunner:
         self._prepare_file_permissions()
 
         with FileContext(self._logfile) as _:
+            self._logger.info("run")
             # Run the command, allow the window to show.
             # https://learn.microsoft.com/en-us/windows/win32/api/shellapi/ns-shellapi-shellexecuteinfoa
             try:
@@ -69,6 +70,7 @@ class _WindowsScriptRunner:
                             self._logger.info(line.rstrip("\r\n"))
                         else:
                             time.sleep(0.1)  # Small delay to reduce CPU usage
+                            self._logger.info("tick")
 
                     # Read any remaining output at the end.
                     for line in f:
