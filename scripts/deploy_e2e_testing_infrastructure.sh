@@ -18,6 +18,7 @@ if ! aws cloudformation describe-stacks --stack-name DeadlineCloudAgentE2EInfras
   OP=create-stack
   echo "Creating the DeadlineCloudAgentE2EInfrastructure stack as it does not already exist"
 else
+  echo "Updating the DeadlineCloudAgentE2EInfrastructure stack as it already exists"
   OP=update-stack
 fi
 

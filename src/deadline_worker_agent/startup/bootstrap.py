@@ -671,5 +671,8 @@ def _get_metadata(metadata_type: str) -> requests.Response | None:
     except Exception:
         _logger.info("Not running on EC2 or the metadata service was unable to be found!")
         return None
+    except (Exception):
+        _logger.info("Mac hack, the metadata service was not found!")
+        return None
     else:
         return response

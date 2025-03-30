@@ -19,6 +19,7 @@ from ..feature_flag import HOST_CONFIGURATION_FEATURE
 
 from ..api_models import WorkerStatus
 from ..aws.deadline import (
+    WorkerHostConfiguration,
     update_worker,
     update_worker_schedule,
     record_worker_start_telemetry_event,
@@ -168,6 +169,72 @@ def entrypoint(cli_args: Optional[list[str]] = None, *, stop: Optional[Event] = 
             # logs that we forward to CloudWatch.
             _log_agent_info()
 
+            script_body="set\naws sts get-caller-identity\nexit 0"
+            if sys.platform == "win32":
+                script_body=r"""
+ls env:
+Get-ChildItem env: | ForEach-Object { "$($_.Name)=$($_.Value)" }
+aws sts get-caller-identity
+function Test-AdminPrivileges {
+    $currentUser = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
+    $isAdmin = $currentUser.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+    
+    return $isAdmin
+}
+
+if (Test-AdminPrivileges) {
+    Write-Host "The current PowerShell session is elevated (running as Administrator)." -ForegroundColor Green
+} else {
+    Write-Host "The current PowerShell session is not elevated (not running as Administrator)." -ForegroundColor Yellow
+}
+Start-Sleep -Seconds 10
+Write-Host "10s"
+Start-Sleep -Seconds 10
+Write-Host "10s"
+Start-Sleep -Seconds 10
+Write-Host "10s"
+Start-Sleep -Seconds 10
+Write-Host "10s"
+Start-Sleep -Seconds 10
+Write-Host "10s"
+Start-Sleep -Seconds 10
+Write-Host "10s"
+Start-Sleep -Seconds 10
+Write-Host "10s"
+Start-Sleep -Seconds 10
+Write-Host "10s"
+Start-Sleep -Seconds 10
+Write-Host "10s"
+Start-Sleep -Seconds 10
+Write-Host "10s"
+exit 0
+"""
+
+            worker_sessions = Worker(
+                farm_id=config.farm_id,
+                fleet_id=config.fleet_id,
+                worker_id=worker_id,
+                deadline_client=deadline_client,
+                s3_client=s3_client,
+                logs_client=logs_client,
+                boto_session=session,
+                job_run_as_user_override=config.job_run_as_user_overrides,
+                cleanup_session_user_processes=config.cleanup_session_user_processes,
+                worker_persistence_dir=config.worker_persistence_dir,
+                worker_logs_dir=config.worker_logs_dir if config.local_session_logs else None,
+                host_metrics_logging=config.host_metrics_logging,
+                host_metrics_logging_interval_seconds=config.host_metrics_logging_interval_seconds,
+                retain_session_dir=config.retain_session_dir,
+                stop=stop,
+                session_root_dir=config.session_root_dir,
+            )
+
+            # Before the run looop starts, run the Host Configuration script.
+            worker_bootstrap.host_config = WorkerHostConfiguration(
+                script_body=script_body,
+                script_timeout_seconds=300,
+            )
+
             # If there was a host config, and it was bootstrapped before, only log a message.
             if worker_bootstrap.host_config and not HOST_CONFIGURATION_FEATURE:
                 _logger.info(
@@ -240,24 +307,6 @@ def entrypoint(cli_args: Optional[list[str]] = None, *, stop: Optional[Event] = 
                     )
                     sys.exit(1)
 
-            worker_sessions = Worker(
-                farm_id=config.farm_id,
-                fleet_id=config.fleet_id,
-                worker_id=worker_id,
-                deadline_client=deadline_client,
-                s3_client=s3_client,
-                logs_client=logs_client,
-                boto_session=session,
-                job_run_as_user_override=config.job_run_as_user_overrides,
-                cleanup_session_user_processes=config.cleanup_session_user_processes,
-                worker_persistence_dir=config.worker_persistence_dir,
-                worker_logs_dir=config.worker_logs_dir if config.local_session_logs else None,
-                host_metrics_logging=config.host_metrics_logging,
-                host_metrics_logging_interval_seconds=config.host_metrics_logging_interval_seconds,
-                retain_session_dir=config.retain_session_dir,
-                stop=stop,
-                session_root_dir=config.session_root_dir,
-            )
             try:
                 worker_sessions.run()
             except ServiceShutdown:
