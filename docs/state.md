@@ -185,12 +185,18 @@ the platform-specific defaults are:
 | POSIX | `/sessions` |
 | Windows | `C:\ProgramData\Amazon\OpenJD` |
 
-Session directories are created as children of the session root directory. The directories begin
-with the session ID, with trailing random characters:
+Session directories are created as children of the session root directory. The directory name is
+eight random characters and carries no session identity:
 
 ```
-<SESSION_ROOT_DIR>/<SESSION_ID>_a159c9
+<SESSION_ROOT_DIR>/a159c9de
 ```
+
+The name is kept this short because the applications a job runs are generally not long-path aware,
+so every character in the session directory path is charged against the Windows `MAX_PATH` limit of
+260. To map a directory back to its session, use the session log, which the worker agent writes to
+`<worker_logs_dir>/<queue_id>/<session_id>.log` and which records the working directory path at
+session initialization.
 
 These directories are populated by the worker agent with files created to run the session. This
 includes:
