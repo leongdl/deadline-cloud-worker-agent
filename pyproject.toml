@@ -56,6 +56,11 @@ Source = "https://github.com/aws-deadline/deadline-cloud-worker-agent"
 deadline-worker-agent = "deadline_worker_agent:entrypoint"
 install-deadline-worker = "deadline_worker_agent:install"
 
+[tool.hatch.metadata]
+# TEST-ONLY (see the openjd-sessions dependency): permit the direct git
+# reference above. Do not merge.
+allow-direct-references = true
+
 [tool.hatch.build]
 artifacts = [
   "*_version.py",
