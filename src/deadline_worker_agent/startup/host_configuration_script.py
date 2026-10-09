@@ -1,6 +1,5 @@
 # Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 
-import os
 import stat
 import time
 from datetime import timedelta
@@ -270,29 +269,14 @@ class HostConfigurationScriptRunner(ScriptRunnerBase):
         script_file_name = self._script_file_name()
         script_file_path = self._session_files_directory / script_file_name
 
-        # Two steps, deliberately: write_file_for_user has no line-ending pass-through,
-        # as every end_of_line it accepts rewrites LF or CRLF. Called with no content,
-        # purely for the mode, group ownership and Windows ACL it used to give the file.
         write_file_for_user(
             script_file_path,
-            "",
+            self._host_configuration_script,
             self._user,
             # Mirrors EmbeddedFiles._materialize_file for a runnable file.
             additional_permissions=stat.S_IXUSR | (stat.S_IXGRP if self._user is not None else 0),
+            verbatim=True,
         )
-
-        # No O_CREAT: the file already exists with the permissions it is to keep.
-        # O_BINARY stops the Windows CRT expanding LF; O_NOFOLLOW refuses a symlink
-        # swapped in between the two opens. Each is absent on the other platform.
-        flags = os.O_WRONLY | os.O_TRUNC
-        flags |= getattr(os, "O_BINARY", 0)
-        flags |= getattr(os, "O_NOFOLLOW", 0)
-        fd = os.open(script_file_path, flags)
-        try:
-            with open(fd, "wb", closefd=False) as script_file:
-                script_file.write(self._host_configuration_script.encode("utf-8"))
-        finally:
-            os.close(fd)
 
         return str(script_file_path)
 
